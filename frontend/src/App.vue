@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useForge } from '@/composables/useForge'
 import { Separator } from '@/components/ui/separator'
@@ -85,12 +85,12 @@ const mockLogs = [
   { message: 'inventory-tracker-api complete!', type: 'success' as const },
 ]
 
-// Auto-show tour on first visit
-onMounted(() => {
-  if (!localStorage.getItem('pf-tour-seen')) {
+// Auto-show tour on first visit (after auth resolves)
+watch(isAuthenticated, (authed) => {
+  if (authed && !localStorage.getItem('pf-tour-seen')) {
     showTour.value = true
   }
-})
+}, { immediate: true })
 
 function onTourStep(stepIndex: number) {
   // Track if user already had real data
