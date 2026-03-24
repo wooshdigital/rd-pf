@@ -204,12 +204,14 @@ watch(() => props.show, (val) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
-  window.addEventListener('resize', updateSpotlight)
+  window.addEventListener('resize', onResize)
 })
+
+function onResize() { updateSpotlight() }
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
-  window.removeEventListener('resize', updateSpotlight)
+  window.removeEventListener('resize', onResize)
 })
 </script>
 
