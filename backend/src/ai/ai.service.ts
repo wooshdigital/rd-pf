@@ -16,6 +16,11 @@ export class AiService {
       throw new Error('RD_AIC_API_KEY is not configured');
     }
 
+    // Enforce JSON output via system prompt
+    if (!body.system) {
+      body.system = 'You are a JSON API. You MUST respond with ONLY valid JSON — no markdown fences, no preamble, no explanation. Your entire response must be parseable by JSON.parse().';
+    }
+
     this.logger.log(`→ POST ${this.apiUrl}/v1/messages (model: ${body.model}, web_search: ${!!body.web_search})`);
     const start = Date.now();
 
@@ -77,9 +82,22 @@ Generate 3-5 project ideas that:
 - Have natural repo names (not "demo" or "tutorial" — think real projects)`;
 
   private parseAiResponse(resp: any) {
-    const text = resp.content[0].text;
-    const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    return JSON.parse(cleaned);
+    // Find the text block (skip tool_use blocks from web_search)
+    const textBlock = resp.content.find((b: any) => b.type === 'text');
+    if (!textBlock) throw new Error('No text content in AI response');
+    const text = textBlock.text;
+
+    // Strip markdown fences
+    let cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    // If not valid JSON, extract the JSON object from surrounding text
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      const m = cleaned.match(/{[\s\S]*}/);
+      if (m) return JSON.parse(m[0]);
+      throw new Error('Could not extract JSON from AI response');
+    }
   }
 
   async analyzeResumeFile(base64Data: string, mediaType: string, webSearch?: boolean) {
