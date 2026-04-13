@@ -10,3 +10,7 @@ workspace/
 bun.lock
 *.vue.js
 *.ts.js
+
+# TS→JS IDE/Volar compilation artifacts (project is pure TS)
+frontend/src/**/*.js
+frontend/vite.config.js
