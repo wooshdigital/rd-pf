@@ -154,6 +154,80 @@ export class AuthController {
     });
   }
 
+
+  // ─── SSO from other Rooche tools (Kinetix, CET) ──────────────
+  // Accepts ?token=<jwt>&source=kinetix|cet (default: kinetix).
+  //   source=kinetix: verifies the token against Kinetix /auth/me
+  //   source=cet:     verifies the token against CET /api/v1/api/auth/me
+  // On success, creates a local PF session and redirects to the frontend
+  // with ?session_token=<new_token> so useAuth can pick it up.
+
+  @Get("sso")
+  async ssoFromToken(
+    @Query("token") token: string,
+    @Query("source") source: string | undefined,
+    @Res() res: Response,
+  ) {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const src = (source || "kinetix").toLowerCase();
+
+    const redirectError = (msg: string) =>
+      res.redirect(
+        `${frontendUrl}/login?error=sso_failed&message=${encodeURIComponent(msg)}`,
+      );
+
+    if (!token) return redirectError("No token provided");
+    if (src !== "kinetix" && src !== "cet") {
+      return redirectError(`Unknown SSO source: ${src}`);
+    }
+
+    try {
+      // Resolve the verification endpoint for the requested source
+      const verifyUrl =
+        src === "kinetix"
+          ? `${process.env.KINETIX_API_URL || "https://kinetix.roochedigital.com"}/api/auth/me`
+          : `${process.env.CET_BASE_URL || "https://cet.roochedigital.com"}/api/v1/api/auth/me`;
+
+      const meResp = await fetch(verifyUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (!meResp.ok) {
+        return redirectError("Invalid or expired session");
+      }
+
+      const meData: any = await meResp.json();
+      const email = meData.email || meData.user?.email;
+      const name =
+        meData.name ||
+        meData.full_name ||
+        meData.user?.name ||
+        meData.user?.full_name ||
+        email;
+      const picture =
+        meData.picture ||
+        meData.profile_picture ||
+        meData.user?.profile_picture ||
+        "";
+
+      if (!email) return redirectError("Invalid user data");
+
+      const sessionToken = this.sessionService.create({
+        email,
+        name,
+        picture,
+        googleId: "",
+      });
+
+      console.log(`[SSO] ${src} SSO login: ${email}`);
+      res.redirect(`${frontendUrl}?session_token=${sessionToken}`);
+    } catch (err: any) {
+      console.error(`[SSO] ${src} SSO error:`, err);
+      return redirectError("SSO authentication failed");
+    }
+  }
+
   // ─── GitHub OAuth (repo pushing — popup flow) ────────────────
 
   @Get('github')
