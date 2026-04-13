@@ -207,19 +207,35 @@ export function useForge() {
     try {
       addLog(`Generating code for ${project.name}...`)
 
+      // Start generation job
       const genResp = await fetch(`${API_BASE}/generate-project`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project, webSearch: webSearch.value }),
       })
       if (!genResp.ok) {
-        const err = await genResp.json()
+        const err = await genResp.json().catch(() => ({ message: 'Generation request failed' }))
         throw new Error(err.message || err.error)
       }
 
-      const generated = await genResp.json()
-      const fileCount = Object.keys(generated.files.files).length
-      addLog(`Generated ${fileCount} files in ${generated.files.commitOrder.length} phases`, 'success')
+      const { jobId: genJobId } = await genResp.json()
+
+      // Poll generation job
+      let generated: any = null
+      while (!generated) {
+        await sleep(2000)
+        const pollResp = await fetch(`${API_BASE}/generate-project/job/${genJobId}`)
+        const genJob = await pollResp.json()
+
+        if (genJob.status === 'done') {
+          generated = { files: genJob.result }
+          const fileCount = Object.keys(generated.files.files).length
+          addLog(`Generated ${fileCount} files in ${generated.files.commitOrder.length} phases`, 'success')
+        } else if (genJob.status === 'error') {
+          throw new Error(genJob.error || 'Code generation failed')
+        }
+        // still running — keep polling
+      }
 
       // Build repo
       projectStatuses[index] = { status: 'building', message: 'Creating repo & committing...' }
