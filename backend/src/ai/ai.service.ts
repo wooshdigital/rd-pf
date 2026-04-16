@@ -200,4 +200,44 @@ Rules:
 
     return this.parseAiResponse(resp);
   }
+
+  async generatePortfolioContent(analysis: any, identity: any) {
+    const resp = await this.callApi({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      messages: [
+        {
+          role: 'user',
+          content: `You are writing the copy for ${analysis.name}'s personal developer portfolio website.
+
+Return ONLY valid JSON matching this shape:
+{
+  "headline": "one-line tagline that captures their role and what they do (max 100 chars)",
+  "title": "their primary role title (e.g. 'Senior Frontend Developer')",
+  "aboutParagraph": "2-3 sentence opening about who they are professionally. Warm, confident, specific to their experience.",
+  "bio": "a follow-up 2-3 sentence paragraph going deeper into what drives them, their technical interests, or their approach. No cliches.",
+  "projectDescriptions": {
+    "<project-name-slug>": "polished 1-2 sentence description for this specific project, rewritten from the raw description to sound like portfolio copy. Keep it concrete and technical.",
+    ...
+  }
+}
+
+Rules:
+- No em dashes (use regular dashes or commas instead).
+- Write like a real person, not a LinkedIn summary. Avoid buzzwords ("passionate", "innovative", "cutting-edge").
+- projectDescriptions must include an entry for every project name in the input list.
+- aboutParagraph and bio together should read as a natural 4-6 sentence About section. Do not repeat the name.
+
+INPUT DATA:
+Name: ${analysis.name}
+Skills: ${(analysis.skills || []).join(', ')}
+Timeline: ${JSON.stringify(analysis.timeline || [])}
+Projects: ${JSON.stringify((analysis.projects || []).map((p: any) => ({ name: p.name, description: p.description, tech: p.tech })))}
+${identity?.textCv?.collegeCourse ? `Education: ${identity.textCv.collegeCourse}${identity.textCv.graduationYear ? ` (${identity.textCv.graduationYear})` : ''}` : ''}`,
+        },
+      ],
+    });
+
+    return this.parseAiResponse(resp);
+  }
 }
