@@ -10,7 +10,8 @@ import StepResume from '@/components/StepResume.vue'
 import StepProjects from '@/components/StepProjects.vue'
 import StepProgress from '@/components/StepProgress.vue'
 import AppTour from '@/components/AppTour.vue'
-import { HelpCircle, LogOut } from 'lucide-vue-next'
+import PortfolioBuilder from '@/components/PortfolioBuilder.vue'
+import { HelpCircle, LogOut, Hammer, Globe } from 'lucide-vue-next'
 
 const { user, loading: authLoading, isAuthenticated, loginWithGoogle, logout } = useAuth()
 
@@ -45,6 +46,10 @@ const {
 
 const showTour = ref(false)
 const hadDataBeforeTour = ref(false)
+
+type View = 'forge' | 'portfolio'
+const view = ref<View>((localStorage.getItem('pf-active-view') as View) || 'forge')
+watch(view, (v) => localStorage.setItem('pf-active-view', v))
 
 const mockProjects = [
   {
@@ -197,7 +202,31 @@ function handleGenerateAll() {
         </div>
       </header>
 
-      <div class="space-y-6">
+      <!-- Tab switcher -->
+      <div class="flex justify-center mb-6">
+        <div class="inline-flex rounded-md border border-input bg-background p-1">
+          <button
+            @click="view = 'forge'"
+            :class="[
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors',
+              view === 'forge' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+            ]"
+          >
+            <Hammer class="h-3.5 w-3.5" /> Forge
+          </button>
+          <button
+            @click="view = 'portfolio'"
+            :class="[
+              'inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors',
+              view === 'portfolio' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground',
+            ]"
+          >
+            <Globe class="h-3.5 w-3.5" /> Portfolio Site
+          </button>
+        </div>
+      </div>
+
+      <div v-if="view === 'forge'" class="space-y-6">
         <StepConfig
           v-model:webSearch="webSearch"
           :accounts="githubAccounts"
@@ -240,6 +269,8 @@ function handleGenerateAll() {
           :logs="logs"
         />
       </div>
+
+      <PortfolioBuilder v-else-if="view === 'portfolio'" />
     </div>
   </div>
 
