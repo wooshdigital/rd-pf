@@ -10,6 +10,15 @@ export interface KinetixIdentityListItem {
   isRecommended: boolean;
 }
 
+export interface KinetixIdentityContact {
+  firstName: string | null;
+  lastName: string | null;
+  middleName: string | null;
+  address: string | null;
+  province: string | null;
+  phone: string | null;
+}
+
 export interface KinetixIdentityDetail extends KinetixIdentityListItem {
   firstName: string | null;
   lastName: string | null;
@@ -19,6 +28,7 @@ export interface KinetixIdentityDetail extends KinetixIdentityListItem {
     companies: Array<{ name: string; startDate: string; endDate: string }>;
   };
   activeCvs: Array<{ title: string; url: string; validationScore: number | null }>;
+  contact: KinetixIdentityContact;
 }
 
 @Injectable()
