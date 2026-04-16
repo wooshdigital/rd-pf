@@ -6,8 +6,9 @@ import { GenerateModule } from './generate/generate.module';
 import { BuildModule } from './build/build.module';
 import { AuthModule } from './auth/auth.module';
 import { KinetixModule } from './kinetix/kinetix.module';
+import { PortfolioModule } from './portfolio/portfolio.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), AiModule, AnalyzeModule, GenerateModule, BuildModule, AuthModule, KinetixModule],
+  imports: [ConfigModule.forRoot(), AiModule, AnalyzeModule, GenerateModule, BuildModule, AuthModule, KinetixModule, PortfolioModule],
 })
 export class AppModule {}

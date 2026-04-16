@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{{name}} — {{title}}</title>
+<style>
+  :root {
+    --fg: #0f172a;
+    --fg-dim: #475569;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --accent: #6366f1;
+    --accent-2: #ec4899;
+    --border: #e2e8f0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 30px -10px rgba(99,102,241,0.3);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .hero {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    color: #fff;
+    padding: 80px 24px 96px;
+    text-align: center;
+    position: relative;
+  }
+  .hero::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 60px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+  }
+  .headshot {
+    width: 140px; height: 140px; border-radius: 50%;
+    object-fit: cover; margin: 0 auto 24px;
+    display: block; border: 4px solid rgba(255,255,255,0.9);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+  }
+  .hero h1 { font-size: 44px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .hero .subtitle { font-size: 18px; opacity: 0.9; font-weight: 500; }
+  .hero .headline {
+    max-width: 580px; margin: 28px auto 0;
+    font-size: 17px; opacity: 0.95;
+    padding: 0 16px;
+  }
+  .wrap {
+    max-width: 1040px; margin: -40px auto 0; padding: 0 24px 80px;
+    position: relative; z-index: 1;
+  }
+  section { margin-bottom: 64px; }
+  h2 {
+    font-size: 28px; font-weight: 800; letter-spacing: -0.01em;
+    margin-bottom: 24px; color: var(--fg);
+    display: flex; align-items: center; gap: 12px;
+  }
+  h2::before {
+    content: ''; width: 4px; height: 28px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent-2));
+    border-radius: 2px;
+  }
+  .about-card {
+    background: var(--card); padding: 32px; border-radius: 16px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .about-card p { margin-bottom: 14px; color: var(--fg-dim); }
+  .about-card p:last-child { margin-bottom: 0; }
+  .skills { display: flex; flex-wrap: wrap; gap: 10px; }
+  .skills span {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 8px 16px; border-radius: 10px;
+    font-size: 14px; font-weight: 500; color: var(--fg);
+    box-shadow: var(--shadow);
+  }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  .project {
+    background: var(--card); padding: 24px; border-radius: 16px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex; flex-direction: column;
+  }
+  .project:hover {
+    transform: translateY(-4px); box-shadow: var(--shadow-lg);
+    border-color: var(--accent);
+  }
+  .project h3 { font-size: 19px; font-weight: 700; margin-bottom: 4px; }
+  .project h3 a { color: var(--fg); text-decoration: none; }
+  .project:hover h3 a { color: var(--accent); }
+  .project-tech { color: var(--fg-dim); font-size: 13px; margin-bottom: 12px; font-weight: 500; }
+  .project p { color: var(--fg-dim); font-size: 14px; flex-grow: 1; }
+  .exp-item {
+    background: var(--card); padding: 20px 24px; border-radius: 12px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+  .exp-item .role { font-weight: 700; font-size: 16px; }
+  .exp-item .org { color: var(--fg-dim); font-size: 14px; }
+  .exp-item .dates {
+    font-size: 13px; color: var(--fg-dim);
+    background: var(--bg); padding: 4px 12px; border-radius: 20px;
+  }
+  .contact-card {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    color: #fff; padding: 32px; border-radius: 16px;
+    text-align: center;
+  }
+  .contact-card a {
+    color: #fff; text-decoration: none; margin: 0 12px;
+    font-weight: 600; padding: 10px 20px;
+    background: rgba(255,255,255,0.15); border-radius: 8px;
+    display: inline-block; margin-bottom: 8px;
+  }
+  .contact-card a:hover { background: rgba(255,255,255,0.25); }
+  footer { text-align: center; color: var(--fg-dim); font-size: 14px; margin-top: 40px; }
+  @media (max-width: 600px) {
+    .exp-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="hero">
+  {{#if headshot}}<img class="headshot" src="{{headshot}}" alt="{{name}}" />{{/if}}
+  <h1>{{name}}</h1>
+  <div class="subtitle">{{title}}</div>
+  {{#if headline}}<div class="headline">{{headline}}</div>{{/if}}
+</div>
+
+<div class="wrap">
+  {{#if aboutParagraph}}
+  <section>
+    <h2>About</h2>
+    <div class="about-card">
+      <p>{{aboutParagraph}}</p>
+      {{#if bio}}<p>{{bio}}</p>{{/if}}
+    </div>
+  </section>
+  {{/if}}
+
+  {{#if skills.length}}
+  <section>
+    <h2>Skills</h2>
+    <div class="skills">{{#each skills}}<span>{{this}}</span>{{/each}}</div>
+  </section>
+  {{/if}}
+
+  {{#if projects.length}}
+  <section>
+    <h2>Projects</h2>
+    <div class="grid">
+      {{#each projects}}
+      <div class="project">
+        <h3>{{#if githubUrl}}<a href="{{githubUrl}}" target="_blank" rel="noopener">{{name}}</a>{{else}}{{name}}{{/if}}</h3>
+        <div class="project-tech">{{#each tech}}{{this}}{{#unless @last}} · {{/unless}}{{/each}}</div>
+        <p>{{description}}</p>
+      </div>
+      {{/each}}
+    </div>
+  </section>
+  {{/if}}
+
+  {{#if experience.length}}
+  <section>
+    <h2>Experience</h2>
+    {{#each experience}}
+    <div class="exp-item">
+      <div>
+        <div class="role">{{role}}</div>
+        <div class="org">{{org}}</div>
+      </div>
+      <div class="dates">{{start}} – {{end}}</div>
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
+
+  {{#if contact}}
+  <section>
+    <h2>Contact</h2>
+    <div class="contact-card">
+      {{#if contact.email}}<a href="mailto:{{contact.email}}">Email</a>{{/if}}
+      {{#if contact.github}}<a href="https://github.com/{{contact.github}}" target="_blank" rel="noopener">GitHub</a>{{/if}}
+      {{#if contact.linkedin}}<a href="{{contact.linkedin}}" target="_blank" rel="noopener">LinkedIn</a>{{/if}}
+    </div>
+  </section>
+  {{/if}}
+
+  <footer>© {{name}}</footer>
+</div>
+</body>
+</html>
