@@ -32,6 +32,27 @@ export interface AnalysisResult {
   projects: Project[]
 }
 
+export interface KinetixIdentity {
+  id: string
+  name: string
+  headshot: string | null
+  maxOljVerificationScore: number | null
+  maxLinkedinVerificationScore: number | null
+  isActive: boolean
+  isRecommended: boolean
+}
+
+export interface KinetixIdentityDetail extends KinetixIdentity {
+  firstName: string | null
+  lastName: string | null
+  textCv: {
+    collegeCourse: string | null
+    graduationYear: number | null
+    companies: Array<{ name: string; startDate: string; endDate: string }>
+  }
+  activeCvs: Array<{ title: string; url: string; validationScore: number | null }>
+}
+
 export type ProjectStatus = 'idle' | 'generating' | 'building' | 'done' | 'error'
 
 export interface LogEntry {
@@ -62,6 +83,12 @@ export function useForge() {
   const projectStatuses = reactive<Record<number, { status: ProjectStatus; message: string }>>({})
   const logs = ref<LogEntry[]>([])
   const currentStep = ref(1)
+
+  // Kinetix identity selection
+  const identities = ref<KinetixIdentity[]>([])
+  const identitiesLoading = ref(false)
+  const identitiesError = ref<string | null>(null)
+  const selectedIdentity = ref<KinetixIdentityDetail | null>(null)
 
   // Restore GitHub accounts from localStorage
   onMounted(() => {
@@ -129,6 +156,55 @@ export function useForge() {
       activeGithubIndex.value = Math.max(0, githubAccounts.value.length - 1)
     }
     saveAccounts()
+  }
+
+  async function loadIdentities(search?: string) {
+    identitiesLoading.value = true
+    identitiesError.value = null
+    try {
+      const qs = search ? `?search=${encodeURIComponent(search)}` : ''
+      const resp = await fetch(`${API_BASE}/identities${qs}`)
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}))
+        throw new Error(err.message || `Failed to load identities (${resp.status})`)
+      }
+      const body = await resp.json()
+      identities.value = body.data || []
+    } catch (err: any) {
+      identitiesError.value = err.message || 'Failed to load identities'
+      identities.value = []
+    } finally {
+      identitiesLoading.value = false
+    }
+  }
+
+  async function selectIdentity(id: string | null) {
+    if (!id) {
+      selectedIdentity.value = null
+      return
+    }
+    try {
+      const resp = await fetch(`${API_BASE}/identities/${encodeURIComponent(id)}`)
+      if (!resp.ok) throw new Error(`Failed to load identity (${resp.status})`)
+      const body = await resp.json()
+      selectedIdentity.value = body.data
+
+      // Pre-fill resume text from the identity's textCv profile so the existing
+      // analyze flow can work without the user pasting anything.
+      const detail = body.data as KinetixIdentityDetail
+      if (detail?.textCv?.companies?.length) {
+        const full = `${detail.firstName || ''} ${detail.lastName || ''}`.trim() || detail.name
+        const course = detail.textCv.collegeCourse
+          ? `\nEducation: ${detail.textCv.collegeCourse}${detail.textCv.graduationYear ? ` (${detail.textCv.graduationYear})` : ''}`
+          : ''
+        const companies = detail.textCv.companies
+          .map((c) => `- ${c.name} (${c.startDate} → ${c.endDate})`)
+          .join('\n')
+        resume.value = `${full}${course}\n\nWork history:\n${companies}`
+      }
+    } catch (err: any) {
+      identitiesError.value = err.message || 'Failed to load identity'
+    }
   }
 
   async function analyzeResume() {
@@ -324,6 +400,10 @@ export function useForge() {
     projectStatuses,
     logs,
     currentStep,
+    identities,
+    identitiesLoading,
+    identitiesError,
+    selectedIdentity,
     addGithubAccount,
     selectGithubAccount,
     removeGithubAccount,
@@ -333,6 +413,8 @@ export function useForge() {
     removeProject,
     generateOne,
     generateAll,
+    loadIdentities,
+    selectIdentity,
   }
 }
 

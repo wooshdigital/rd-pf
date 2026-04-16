@@ -3,19 +3,26 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Globe, Plus, Trash2, Check, ChevronDown } from 'lucide-vue-next'
-import type { GithubAccount } from '@/composables/useForge'
+import type { GithubAccount, KinetixIdentity, KinetixIdentityDetail } from '@/composables/useForge'
+import IdentityPicker from '@/components/IdentityPicker.vue'
 
 const webSearch = defineModel<boolean>('webSearch', { required: true })
 
 const props = defineProps<{
   accounts: GithubAccount[]
   activeIndex: number
+  identities: KinetixIdentity[]
+  identitiesLoading: boolean
+  identitiesError: string | null
+  selectedIdentity: KinetixIdentityDetail | null
 }>()
 
 const emit = defineEmits<{
   addAccount: []
   selectAccount: [index: number]
   removeAccount: [index: number]
+  loadIdentities: [search?: string]
+  selectIdentity: [id: string | null]
 }>()
 
 const dropdownOpen = ref(false)
@@ -61,6 +68,15 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
           />
         </button>
       </div>
+
+      <IdentityPicker
+        :identities="props.identities"
+        :loading="props.identitiesLoading"
+        :error="props.identitiesError"
+        :selected="props.selectedIdentity"
+        @load="(q?: string) => emit('loadIdentities', q)"
+        @select="(id: string | null) => emit('selectIdentity', id)"
+      />
 
       <div data-tour="github-login" class="space-y-2">
         <label class="text-sm font-medium text-muted-foreground">GitHub Account</label>

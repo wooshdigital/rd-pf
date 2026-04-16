@@ -26,6 +26,10 @@ const {
   projectStatuses,
   logs,
   currentStep,
+  identities,
+  identitiesLoading,
+  identitiesError,
+  selectedIdentity,
   addGithubAccount,
   selectGithubAccount,
   removeGithubAccount,
@@ -35,6 +39,8 @@ const {
   removeProject,
   generateOne,
   generateAll,
+  loadIdentities,
+  selectIdentity,
 } = useForge()
 
 const showTour = ref(false)
@@ -196,9 +202,15 @@ function handleGenerateAll() {
           v-model:webSearch="webSearch"
           :accounts="githubAccounts"
           :activeIndex="activeGithubIndex"
+          :identities="identities"
+          :identitiesLoading="identitiesLoading"
+          :identitiesError="identitiesError"
+          :selectedIdentity="selectedIdentity"
           @addAccount="addGithubAccount"
           @selectAccount="selectGithubAccount"
           @removeAccount="removeGithubAccount"
+          @loadIdentities="loadIdentities"
+          @selectIdentity="selectIdentity"
         />
 
         <StepResume
